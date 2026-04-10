@@ -3,270 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TSLA Account Dashboard</title>
+    <title>Encrypted Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { background-color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        .card { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); padding: 24px; margin-bottom: 24px; }
-        th { text-align: right; }
-        th.text-left { text-align: left; }
-        input[type=number]::-webkit-inner-spin-button, 
-        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        input[type=number] { -moz-appearance: textfield; }
-    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
-<body class="p-8 text-gray-800">
-
-    <div class="max-w-6xl mx-auto">
-        <h1 class="text-3xl font-bold mb-2">Tesla (TSLA) Portfolio Dashboard</h1>
-        <p class="text-sm font-medium text-blue-600 mb-8" id="timestamp">Fetching live market data...</p>
-
-        <!-- Metrics -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="card">
-                <h3 class="text-sm font-medium text-gray-500">Current TSLA Price</h3>
-                <p class="text-3xl font-bold mt-2" id="tsla-price">...</p>
-                <p class="text-xs text-gray-400 mt-1">USD</p>
-            </div>
-            <div class="card">
-                <h3 class="text-sm font-medium text-gray-500">Total Shares</h3>
-                <p class="text-3xl font-bold mt-2" id="total-shares">0</p>
-            </div>
-            <div class="card">
-                <h3 class="text-sm font-medium text-gray-500">Exchange Rate</h3>
-                <p class="text-3xl font-bold mt-2" id="usd-cad">...</p>
-                <p class="text-xs text-gray-400 mt-1">USD to CAD</p>
-            </div>
-        </div>
-
-        <!-- Current Value Table -->
-        <div class="card">
-            <h2 class="text-xl font-semibold mb-4">Current Value by Account</h2>
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead>
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account</th>
-                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Shares</th>
-                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Value (USD)</th>
-                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Value (CAD)</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200" id="current-table-body">
-                        <!-- Rows injected by JS -->
-                    </tbody>
-                    <tfoot class="font-bold" id="current-table-foot">
-                        <!-- Totals injected by JS -->
-                    </tfoot>
-                </table>
-            </div>
-        </div>
-
-        <!-- Future Scenarios Table -->
-        <div class="card">
-            <h2 class="text-xl font-semibold mb-2">Future Scenarios (USD / CAD)</h2>
-            <p class="text-sm text-gray-500 mb-6">Projected value if TSLA hits target prices. <span class="text-blue-600 font-medium px-1 py-0.5 bg-blue-50 rounded">Edit the prices below</span> to calculate dynamically.</p>
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead>
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account</th>
-                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-green-600">
-                                $<input type="number" id="price-0" value="400" class="w-16 bg-transparent border-b-2 border-gray-300 hover:border-green-400 focus:border-green-600 outline-none text-right font-bold transition-colors" oninput="updateFutureTable()">
-                            </th>
-                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-green-600">
-                                $<input type="number" id="price-1" value="500" class="w-16 bg-transparent border-b-2 border-gray-300 hover:border-green-400 focus:border-green-600 outline-none text-right font-bold transition-colors" oninput="updateFutureTable()">
-                            </th>
-                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-blue-600">
-                                $<input type="number" id="price-2" value="1000" class="w-20 bg-transparent border-b-2 border-gray-300 hover:border-blue-400 focus:border-blue-600 outline-none text-right font-bold transition-colors" oninput="updateFutureTable()">
-                            </th>
-                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-purple-600">
-                                $<input type="number" id="price-3" value="2000" class="w-20 bg-transparent border-b-2 border-gray-300 hover:border-purple-400 focus:border-purple-600 outline-none text-right font-bold transition-colors" oninput="updateFutureTable()">
-                            </th>
-                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-pink-600">
-                                $<input type="number" id="price-4" value="3000" class="w-20 bg-transparent border-b-2 border-gray-300 hover:border-pink-400 focus:border-pink-600 outline-none text-right font-bold transition-colors" oninput="updateFutureTable()">
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200" id="future-table-body">
-                        <!-- Rows injected by JS -->
-                    </tbody>
-                    <tfoot class="font-bold" id="future-table-foot">
-                        <!-- Totals injected by JS -->
-                    </tfoot>
-                </table>
-            </div>
-        </div>
-
-    </div>
-
-    <script>
-        // Fallbacks in case API fails
-        let tslaPriceUSD = 345.62;
-        let exchangeRate = 1.3822; 
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+    <div class="bg-white p-8 rounded-xl shadow-lg w-96 text-center">
+        <svg class="w-12 h-12 mx-auto mb-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+        </svg>
+        <h2 class="text-2xl font-bold mb-2 text-gray-800">Secure Vault</h2>
+        <p class="text-sm text-gray-500 mb-6">Enter password to view your TSLA Dashboard</p>
         
-        const accounts = [
-            { name: "Yu RRSP", shares: 3854 },
-            { name: "Yu RESP", shares: 450 },
-            { name: "Shan TSFA", shares: 39 },
-            { name: "Shan RRSP", shares: 1130 },
-            { name: "Shan Corp", shares: 158 },
-            { name: "Yu Non-Reg", shares: 610 }
-        ];
-
-        const fmtUSD = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
-        const fmtCAD = new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 });
-        const fmtNum = new Intl.NumberFormat('en-US');
-
-        function getAccountColor(name) {
-            const lower = name.toLowerCase();
-            if (lower.includes('rrsp')) return 'bg-blue-100';
-            if (lower.includes('tsfa') || lower.includes('tfsa')) return 'bg-green-100';
-            if (lower.includes('resp')) return 'bg-yellow-100';
-            return 'bg-orange-100';
-        }
-
-        async function fetchWithFallback(url1, url2) {
+        <input type="password" id="pwd" class="w-full border border-gray-300 p-3 rounded mb-4 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="Password" onkeypress="if(event.key === 'Enter') unlock()">
+        
+        <button onclick="unlock()" class="w-full bg-blue-600 text-white font-bold py-3 rounded hover:bg-blue-700 transition-colors">Unlock</button>
+        
+        <p id="err" class="text-red-500 text-sm mt-4 hidden">Incorrect password.</p>
+    </div>
+    
+    <script>
+        const ciphertext = "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";
+        
+        function unlock() {
+            const pwd = document.getElementById('pwd').value;
             try {
-                let res = await fetch(url1);
-                if (!res.ok) throw new Error("First URL failed");
-                return await res.json();
+                // Mathematically decrypt the AES payload
+                const bytes = CryptoJS.AES.decrypt(ciphertext, pwd);
+                const originalHtml = bytes.toString(CryptoJS.enc.Utf8);
+                
+                if (originalHtml) {
+                    // Replace the page with the decrypted dashboard
+                    document.open();
+                    document.write(originalHtml);
+                    document.close();
+                } else {
+                    document.getElementById('err').classList.remove('hidden');
+                }
             } catch (e) {
-                console.warn("Fallback triggered for", url2);
-                let res = await fetch(url2);
-                return await res.json();
+                document.getElementById('err').classList.remove('hidden');
             }
         }
-
-        async function initDashboard() {
-            try {
-                // Fetch live CAD exchange rate
-                const fxData = await fetch('https://open.er-api.com/v6/latest/USD').then(r => r.json());
-                if (fxData && fxData.rates && fxData.rates.CAD) {
-                    exchangeRate = fxData.rates.CAD;
-                }
-
-                // Fetch live TSLA price using raw proxy to avoid parsing issues, with a fallback proxy
-                const yfUrl = encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/TSLA');
-                const url1 = `https://api.allorigins.win/raw?url=${yfUrl}`;
-                const url2 = `https://api.codetabs.com/v1/proxy?quest=${yfUrl}`;
-                
-                const tslaData = await fetchWithFallback(url1, url2);
-                
-                if (tslaData && tslaData.chart && tslaData.chart.result && tslaData.chart.result.length > 0) {
-                    tslaPriceUSD = tslaData.chart.result[0].meta.regularMarketPrice;
-                }
-
-                document.getElementById('timestamp').innerText = "Live Market Data Updated: " + new Date().toLocaleString();
-                document.getElementById('timestamp').className = "text-sm font-medium text-green-600 mb-8";
-            } catch (e) {
-                console.error("Error fetching live data:", e);
-                document.getElementById('timestamp').innerText = "Failed to fetch live data (Browser may be blocking local file requests). Showing cached prices.";
-                document.getElementById('timestamp').className = "text-sm font-medium text-red-500 mb-8";
-            }
-
-            // Update top metrics
-            document.getElementById('tsla-price').innerText = "$" + tslaPriceUSD.toFixed(2);
-            document.getElementById('usd-cad').innerText = exchangeRate.toFixed(4);
-
-            renderCurrentTable();
-            updateFutureTable();
-        }
-
-        function renderCurrentTable() {
-            let totalShares = 0;
-            let totalValUSD = 0;
-            let totalValCAD = 0;
-            const currentTbody = document.getElementById('current-table-body');
-            currentTbody.innerHTML = '';
-            
-            accounts.forEach(acc => {
-                const shares = acc.shares;
-                totalShares += shares;
-                const valUSD = shares * tslaPriceUSD;
-                const valCAD = valUSD * exchangeRate;
-                totalValUSD += valUSD;
-                totalValCAD += valCAD;
-
-                const rowColor = getAccountColor(acc.name);
-
-                const trC = document.createElement('tr');
-                trC.className = rowColor;
-                trC.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${acc.name}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-right">${fmtNum.format(shares)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-right">${fmtUSD.format(valUSD)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-medium">${fmtCAD.format(valCAD)}</td>
-                `;
-                currentTbody.appendChild(trC);
-            });
-
-            document.getElementById('total-shares').innerText = fmtNum.format(totalShares);
-
-            document.getElementById('current-table-foot').innerHTML = `
-                <tr class="bg-gray-200">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Total</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">${fmtNum.format(totalShares)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">${fmtUSD.format(totalValUSD)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">${fmtCAD.format(totalValCAD)}</td>
-                </tr>
-            `;
-        }
-
-        function updateFutureTable() {
-            const futurePrices = [
-                parseFloat(document.getElementById('price-0').value) || 0,
-                parseFloat(document.getElementById('price-1').value) || 0,
-                parseFloat(document.getElementById('price-2').value) || 0,
-                parseFloat(document.getElementById('price-3').value) || 0,
-                parseFloat(document.getElementById('price-4').value) || 0
-            ];
-
-            let totalFuturesUSD = [0, 0, 0, 0, 0];
-            let totalFuturesCAD = [0, 0, 0, 0, 0];
-            const futureTbody = document.getElementById('future-table-body');
-            futureTbody.innerHTML = '';
-
-            accounts.forEach(acc => {
-                const shares = acc.shares;
-                const rowColor = getAccountColor(acc.name);
-
-                const trF = document.createElement('tr');
-                trF.className = rowColor;
-                let futureHtml = `<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 align-middle">${acc.name}</td>`;
-                
-                futurePrices.forEach((p, idx) => {
-                    const pUSD = p * shares;
-                    const pCAD = pUSD * exchangeRate;
-                    totalFuturesUSD[idx] += pUSD;
-                    totalFuturesCAD[idx] += pCAD;
-                    futureHtml += `
-                        <td class="px-6 py-3 whitespace-nowrap text-right">
-                            <div class="text-sm text-gray-900">${fmtUSD.format(pUSD)}</div>
-                            <div class="text-xs text-gray-500 mt-0.5">${fmtCAD.format(pCAD)} CAD</div>
-                        </td>
-                    `;
-                });
-                trF.innerHTML = futureHtml;
-                futureTbody.appendChild(trF);
-            });
-
-            let futureTotalsHtml = `<tr class="bg-gray-200"><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-bold align-middle">Total</td>`;
-            futurePrices.forEach((_, idx) => {
-                futureTotalsHtml += `
-                    <td class="px-6 py-3 whitespace-nowrap text-right">
-                        <div class="text-sm text-gray-900 font-bold">${fmtUSD.format(totalFuturesUSD[idx])}</div>
-                        <div class="text-xs text-gray-600 mt-0.5 font-medium">${fmtCAD.format(totalFuturesCAD[idx])} CAD</div>
-                    </td>
-                `;
-            });
-            futureTotalsHtml += `</tr>`;
-            document.getElementById('future-table-foot').innerHTML = futureTotalsHtml;
-        }
-
-        // Start the dashboard
-        initDashboard();
-
     </script>
 </body>
 </html>
