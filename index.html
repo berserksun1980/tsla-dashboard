@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TSLA Account Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        .card { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); padding: 24px; margin-bottom: 24px; }
+        th { text-align: right; }
+        th.text-left { text-align: left; }
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+    </style>
+</head>
+<body class="p-8 text-gray-800">
+
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-3xl font-bold mb-2">Tesla (TSLA) Portfolio Dashboard</h1>
+        <p class="text-sm font-medium text-blue-600 mb-8" id="timestamp">Fetching live market data...</p>
+
+        <!-- Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="card">
+                <h3 class="text-sm font-medium text-gray-500">Current TSLA Price</h3>
+                <p class="text-3xl font-bold mt-2" id="tsla-price">...</p>
+                <p class="text-xs text-gray-400 mt-1">USD</p>
+            </div>
+            <div class="card">
+                <h3 class="text-sm font-medium text-gray-500">Total Shares</h3>
+                <p class="text-3xl font-bold mt-2" id="total-shares">0</p>
+            </div>
+            <div class="card">
+                <h3 class="text-sm font-medium text-gray-500">Exchange Rate</h3>
+                <p class="text-3xl font-bold mt-2" id="usd-cad">...</p>
+                <p class="text-xs text-gray-400 mt-1">USD to CAD</p>
+            </div>
+        </div>
+
+        <!-- Current Value Table -->
+        <div class="card">
+            <h2 class="text-xl font-semibold mb-4">Current Value by Account</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account</th>
+                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Shares</th>
+                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Value (USD)</th>
+                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Value (CAD)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200" id="current-table-body">
+                        <!-- Rows injected by JS -->
+                    </tbody>
+                    <tfoot class="font-bold" id="current-table-foot">
+                        <!-- Totals injected by JS -->
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <!-- Future Scenarios Table -->
+        <div class="card">
+            <h2 class="text-xl font-semibold mb-2">Future Scenarios (USD / CAD)</h2>
+            <p class="text-sm text-gray-500 mb-6">Projected value if TSLA hits target prices. <span class="text-blue-600 font-medium px-1 py-0.5 bg-blue-50 rounded">Edit the prices below</span> to calculate dynamically.</p>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account</th>
+                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-green-600">
+                                $<input type="number" id="price-0" value="400" class="w-16 bg-transparent border-b-2 border-gray-300 hover:border-green-400 focus:border-green-600 outline-none text-right font-bold transition-colors" oninput="updateFutureTable()">
+                            </th>
+                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-green-600">
+                                $<input type="number" id="price-1" value="500" class="w-16 bg-transparent border-b-2 border-gray-300 hover:border-green-400 focus:border-green-600 outline-none text-right font-bold transition-colors" oninput="updateFutureTable()">
+                            </th>
+                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-blue-600">
+                                $<input type="number" id="price-2" value="1000" class="w-20 bg-transparent border-b-2 border-gray-300 hover:border-blue-400 focus:border-blue-600 outline-none text-right font-bold transition-colors" oninput="updateFutureTable()">
+                            </th>
+                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-purple-600">
+                                $<input type="number" id="price-3" value="2000" class="w-20 bg-transparent border-b-2 border-gray-300 hover:border-purple-400 focus:border-purple-600 outline-none text-right font-bold transition-colors" oninput="updateFutureTable()">
+                            </th>
+                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-pink-600">
+                                $<input type="number" id="price-4" value="3000" class="w-20 bg-transparent border-b-2 border-gray-300 hover:border-pink-400 focus:border-pink-600 outline-none text-right font-bold transition-colors" oninput="updateFutureTable()">
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200" id="future-table-body">
+                        <!-- Rows injected by JS -->
+                    </tbody>
+                    <tfoot class="font-bold" id="future-table-foot">
+                        <!-- Totals injected by JS -->
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Fallbacks in case API fails
+        let tslaPriceUSD = 345.62;
+        let exchangeRate = 1.3822; 
+        
+        const accounts = [
+            { name: "Yu RRSP", shares: 3854 },
+            { name: "Yu RESP", shares: 450 },
+            { name: "Shan TSFA", shares: 39 },
+            { name: "Shan RRSP", shares: 1130 },
+            { name: "Shan Corp", shares: 158 },
+            { name: "Yu Non-Reg", shares: 610 }
+        ];
+
+        const fmtUSD = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+        const fmtCAD = new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 });
+        const fmtNum = new Intl.NumberFormat('en-US');
+
+        function getAccountColor(name) {
+            const lower = name.toLowerCase();
+            if (lower.includes('rrsp')) return 'bg-blue-100';
+            if (lower.includes('tsfa') || lower.includes('tfsa')) return 'bg-green-100';
+            if (lower.includes('resp')) return 'bg-yellow-100';
+            return 'bg-orange-100';
+        }
+
+        async function fetchWithFallback(url1, url2) {
+            try {
+                let res = await fetch(url1);
+                if (!res.ok) throw new Error("First URL failed");
+                return await res.json();
+            } catch (e) {
+                console.warn("Fallback triggered for", url2);
+                let res = await fetch(url2);
+                return await res.json();
+            }
+        }
+
+        async function initDashboard() {
+            try {
+                // Fetch live CAD exchange rate
+                const fxData = await fetch('https://open.er-api.com/v6/latest/USD').then(r => r.json());
+                if (fxData && fxData.rates && fxData.rates.CAD) {
+                    exchangeRate = fxData.rates.CAD;
+                }
+
+                // Fetch live TSLA price using raw proxy to avoid parsing issues, with a fallback proxy
+                const yfUrl = encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/TSLA');
+                const url1 = `https://api.allorigins.win/raw?url=${yfUrl}`;
+                const url2 = `https://api.codetabs.com/v1/proxy?quest=${yfUrl}`;
+                
+                const tslaData = await fetchWithFallback(url1, url2);
+                
+                if (tslaData && tslaData.chart && tslaData.chart.result && tslaData.chart.result.length > 0) {
+                    tslaPriceUSD = tslaData.chart.result[0].meta.regularMarketPrice;
+                }
+
+                document.getElementById('timestamp').innerText = "Live Market Data Updated: " + new Date().toLocaleString();
+                document.getElementById('timestamp').className = "text-sm font-medium text-green-600 mb-8";
+            } catch (e) {
+                console.error("Error fetching live data:", e);
+                document.getElementById('timestamp').innerText = "Failed to fetch live data (Browser may be blocking local file requests). Showing cached prices.";
+                document.getElementById('timestamp').className = "text-sm font-medium text-red-500 mb-8";
+            }
+
+            // Update top metrics
+            document.getElementById('tsla-price').innerText = "$" + tslaPriceUSD.toFixed(2);
+            document.getElementById('usd-cad').innerText = exchangeRate.toFixed(4);
+
+            renderCurrentTable();
+            updateFutureTable();
+        }
+
+        function renderCurrentTable() {
+            let totalShares = 0;
+            let totalValUSD = 0;
+            let totalValCAD = 0;
+            const currentTbody = document.getElementById('current-table-body');
+            currentTbody.innerHTML = '';
+            
+            accounts.forEach(acc => {
+                const shares = acc.shares;
+                totalShares += shares;
+                const valUSD = shares * tslaPriceUSD;
+                const valCAD = valUSD * exchangeRate;
+                totalValUSD += valUSD;
+                totalValCAD += valCAD;
+
+                const rowColor = getAccountColor(acc.name);
+
+                const trC = document.createElement('tr');
+                trC.className = rowColor;
+                trC.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${acc.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-right">${fmtNum.format(shares)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-right">${fmtUSD.format(valUSD)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-medium">${fmtCAD.format(valCAD)}</td>
+                `;
+                currentTbody.appendChild(trC);
+            });
+
+            document.getElementById('total-shares').innerText = fmtNum.format(totalShares);
+
+            document.getElementById('current-table-foot').innerHTML = `
+                <tr class="bg-gray-200">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Total</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">${fmtNum.format(totalShares)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">${fmtUSD.format(totalValUSD)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">${fmtCAD.format(totalValCAD)}</td>
+                </tr>
+            `;
+        }
+
+        function updateFutureTable() {
+            const futurePrices = [
+                parseFloat(document.getElementById('price-0').value) || 0,
+                parseFloat(document.getElementById('price-1').value) || 0,
+                parseFloat(document.getElementById('price-2').value) || 0,
+                parseFloat(document.getElementById('price-3').value) || 0,
+                parseFloat(document.getElementById('price-4').value) || 0
+            ];
+
+            let totalFuturesUSD = [0, 0, 0, 0, 0];
+            let totalFuturesCAD = [0, 0, 0, 0, 0];
+            const futureTbody = document.getElementById('future-table-body');
+            futureTbody.innerHTML = '';
+
+            accounts.forEach(acc => {
+                const shares = acc.shares;
+                const rowColor = getAccountColor(acc.name);
+
+                const trF = document.createElement('tr');
+                trF.className = rowColor;
+                let futureHtml = `<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 align-middle">${acc.name}</td>`;
+                
+                futurePrices.forEach((p, idx) => {
+                    const pUSD = p * shares;
+                    const pCAD = pUSD * exchangeRate;
+                    totalFuturesUSD[idx] += pUSD;
+                    totalFuturesCAD[idx] += pCAD;
+                    futureHtml += `
+                        <td class="px-6 py-3 whitespace-nowrap text-right">
+                            <div class="text-sm text-gray-900">${fmtUSD.format(pUSD)}</div>
+                            <div class="text-xs text-gray-500 mt-0.5">${fmtCAD.format(pCAD)} CAD</div>
+                        </td>
+                    `;
+                });
+                trF.innerHTML = futureHtml;
+                futureTbody.appendChild(trF);
+            });
+
+            let futureTotalsHtml = `<tr class="bg-gray-200"><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-bold align-middle">Total</td>`;
+            futurePrices.forEach((_, idx) => {
+                futureTotalsHtml += `
+                    <td class="px-6 py-3 whitespace-nowrap text-right">
+                        <div class="text-sm text-gray-900 font-bold">${fmtUSD.format(totalFuturesUSD[idx])}</div>
+                        <div class="text-xs text-gray-600 mt-0.5 font-medium">${fmtCAD.format(totalFuturesCAD[idx])} CAD</div>
+                    </td>
+                `;
+            });
+            futureTotalsHtml += `</tr>`;
+            document.getElementById('future-table-foot').innerHTML = futureTotalsHtml;
+        }
+
+        // Start the dashboard
+        initDashboard();
+
+    </script>
+</body>
+</html>
