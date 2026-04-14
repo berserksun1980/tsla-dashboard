@@ -53,8 +53,16 @@ async function handleStock(res) {
     try {
         const url = 'https://query1.finance.yahoo.com/v8/finance/chart/TSLA?interval=1d&range=1d';
         const data = await fetchJSON(url);
-        const price = data.chart.result[0].meta.regularMarketPrice;
-        sendJSON(res, 200, { price });
+        const meta  = data.chart.result[0].meta;
+        const price = meta.regularMarketPrice;
+        const prev  = meta.chartPreviousClose;
+        sendJSON(res, 200, {
+            price,
+            previousClose: prev,
+            change: price - prev,
+            changePercent: ((price - prev) / prev) * 100,
+            source: 'yahoo-q1',
+        });
     } catch (e) {
         console.error('[/api/stock]', e.message);
         sendJSON(res, 502, { error: e.message });
@@ -79,7 +87,10 @@ function handleFile(res, filePath, contentType) {
             res.writeHead(404);
             res.end('Not found');
         } else {
-            res.writeHead(200, { 'Content-Type': contentType });
+            res.writeHead(200, {
+                'Content-Type': contentType,
+                'Cache-Control': 'no-store',
+            });
             res.end(content);
         }
     });
