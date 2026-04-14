@@ -30,9 +30,11 @@ async function tryYahooV8() {
         'https://query1.finance.yahoo.com/v8/finance/chart/TSLA?interval=1d&range=1d'
     );
     const data = JSON.parse(body);
-    const price = data.chart.result[0].meta.regularMarketPrice;
+    const meta  = data.chart.result[0].meta;
+    const price = meta.regularMarketPrice;
+    const prev  = meta.chartPreviousClose;
     if (!price) throw new Error('No price in Yahoo v8 response');
-    return price;
+    return { price, prev };
 }
 
 // Source 2: Yahoo Finance query2 (different server pool)
@@ -41,9 +43,11 @@ async function tryYahooV8Q2() {
         'https://query2.finance.yahoo.com/v8/finance/chart/TSLA?interval=1d&range=1d'
     );
     const data = JSON.parse(body);
-    const price = data.chart.result[0].meta.regularMarketPrice;
+    const meta  = data.chart.result[0].meta;
+    const price = meta.regularMarketPrice;
+    const prev  = meta.chartPreviousClose;
     if (!price) throw new Error('No price in Yahoo q2 response');
-    return price;
+    return { price, prev };
 }
 
 // Source 3: Stooq (free, no key, works from cloud)
@@ -51,10 +55,11 @@ async function tryStooq() {
     const { body } = await fetchURL('https://stooq.com/q/l/?s=tsla.us&f=sd2t2ohlcv&h&e=csv');
     // CSV format: Symbol,Date,Time,Open,High,Low,Close,Volume
     const lines = body.trim().split('\n');
-    const cols = lines[1].split(',');
+    const cols  = lines[1].split(',');
     const price = parseFloat(cols[6]); // Close price
+    const prev  = parseFloat(cols[3]); // Open price as proxy
     if (!price || isNaN(price)) throw new Error('No price in Stooq response');
-    return price;
+    return { price, prev };
 }
 
 module.exports = async (req, res) => {
@@ -70,8 +75,14 @@ module.exports = async (req, res) => {
     const errors = [];
     for (const source of sources) {
         try {
-            const price = await source.fn();
-            return res.json({ price, source: source.name });
+            const { price, prev } = await source.fn();
+            return res.json({
+                price,
+                previousClose:  prev,
+                change:         price - prev,
+                changePercent:  ((price - prev) / prev) * 100,
+                source:         source.name,
+            });
         } catch (e) {
             errors.push(`${source.name}: ${e.message}`);
         }
